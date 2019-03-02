@@ -1,0 +1,222 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "create_walls_dataset.ipynb",
+      "version": "0.3.2",
+      "provenance": [],
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/marianoogimenez/ABB/blob/master/recommendation-system/collaborative-filtering/create_walls_dataset.ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "metadata": {
+        "id": "jXukPiNkZxo9",
+        "colab_type": "text"
+      },
+      "cell_type": "markdown",
+      "source": [
+        "# Collaborative filtering using WALS algorithm  | 2"
+      ]
+    },
+    {
+      "metadata": {
+        "id": "FywH4kegZzc_",
+        "colab_type": "text"
+      },
+      "cell_type": "markdown",
+      "source": [
+        "## Create walls dataset"
+      ]
+    },
+    {
+      "metadata": {
+        "id": "zmrbI23TYgQV",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "PROJECT = 'qwiklabs-gcp-4a684069c4776675'\n",
+        "BUCKET = 'colaborative-filtering-agea'\n",
+        "REGION = 'us-central1'"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "NyzZrceSZSON",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "from google.colab import auth\n",
+        "import pandas as pd\n",
+        "import numpy as np"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "LmPUOiw1Z6J7",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "auth.authenticate_user()"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "EK99cjocZ-j-",
+        "colab_type": "text"
+      },
+      "cell_type": "markdown",
+      "source": [
+        "### Mapping"
+      ]
+    },
+    {
+      "metadata": {
+        "id": "_fAbjR9maIn3",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "def create_mapping(values, filename):\n",
+        "  with open(filename, 'w') as ofp:\n",
+        "    value_to_id = {value:idx for idx, value in enumerate(values.unique())}\n",
+        "    for value, idx in value_to_id.items():\n",
+        "      ofp.write('{},{}\\n'.format(value, idx))\n",
+        "  return value_to_id\n"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "zbsjNuj-b1-d",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 68
+        },
+        "outputId": "71bf6b41-94db-4226-b1c6-9f1bfa86fb1b"
+      },
+      "cell_type": "code",
+      "source": [
+        "!gsutil cp gs://{BUCKET}/collab_raw.csv  'data/collab_raw.csv'  "
+      ],
+      "execution_count": 9,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Copying gs://colaborative-filtering-agea/collab_raw.csv...\n",
+            "/ [1 files][ 21.5 KiB/ 21.5 KiB]                                                \n",
+            "Operation completed over 1 objects/21.5 KiB.                                     \n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "id": "9U6DCIFMaTQo",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "df = pd.read_csv('data/collab_raw.csv',\n",
+        "                 header=None,\n",
+        "                 names=['visitorId', 'contentId', 'rating'],\n",
+        "                dtype={'visitorId': str, 'contentId': str, 'rating': np.float})"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "vyZnMPMecZtk",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "user_mapping = create_mapping(df['visitorId'], 'data/users.csv')\n",
+        "item_mapping = create_mapping(df['contentId'], 'data/items.csv')"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "ln-EZcsdd_hk",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 119
+        },
+        "outputId": "6a9827d0-b987-4e27-ada2-a07374af3ca1"
+      },
+      "cell_type": "code",
+      "source": [
+        "#copy to bucket\n",
+        "!gsutil cp 'data/users.csv'  gs://{BUCKET}/users.csv   \n",
+        "!gsutil cp 'data/items.csv'  gs://{BUCKET}/items.csv  "
+      ],
+      "execution_count": 22,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Copying file://data/users.csv [Content-Type=text/csv]...\n",
+            "/ [1 files][ 11.6 KiB/ 11.6 KiB]                                                \n",
+            "Operation completed over 1 objects/11.6 KiB.                                     \n",
+            "Copying file://data/items.csv [Content-Type=text/csv]...\n",
+            "/ [1 files][ 12.0 KiB/ 12.0 KiB]                                                \n",
+            "Operation completed over 1 objects/12.0 KiB.                                     \n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "id": "wAxv2ybDdwOH",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "df['userId'] = df['visitorId'].map(user_mapping.get)\n",
+        "df['itemId'] = df['contentId'].map(item_mapping.get)"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    }
+  ]
+}
